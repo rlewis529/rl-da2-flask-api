@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from models import db, Stock
 from config import Config
 from flask_cors import CORS
+from spotify_api import search_podcasts
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -30,6 +31,31 @@ def add_stock():
     db.session.add(new_stock)
     db.session.commit()
     return {"message": f"Stock {new_stock.symbol} added successfully!"}, 201
+
+@app.route("/search-podcast")
+def search_podcast():
+    query = request.args.get("q")
+    if not query:
+        return {"error": "Missing query parameter 'q'"}, 400
+
+    try:
+        results = search_podcasts(query)
+        podcasts = [
+            {
+                "name": item["name"],
+                "publisher": item["publisher"],
+                "description": item["description"],
+                "image": item["images"][0]["url"] if item["images"] else None,
+                "id": item["id"],
+                "url": item["external_urls"]["spotify"],
+                "episodes": item["total_episodes"]
+            }
+            for item in results
+            if item["media_type"] == "audio"  # ← Add this line to filter just podcasts
+        ]
+        return jsonify(podcasts)
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 if __name__ == "__main__":
     with app.app_context():
