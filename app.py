@@ -50,8 +50,7 @@ def search_podcast():
                 "url": item["external_urls"]["spotify"],
                 "episodes": item["total_episodes"]
             }
-            for item in results
-            if item["media_type"] == "audio"  # ← Add this line to filter just podcasts
+            for item in results            
         ]
         return jsonify(podcasts)
     except Exception as e:

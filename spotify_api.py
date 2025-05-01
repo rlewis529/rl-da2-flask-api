@@ -25,7 +25,7 @@ def get_spotify_token():
     response.raise_for_status()
     return response.json()["access_token"]
 
-def search_podcasts(query, limit=5):
+def search_podcasts(query, limit=20):
     token = get_spotify_token()
     headers = {"Authorization": f"Bearer {token}"}
     params = {
