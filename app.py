@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from models import db, Stock
 from config import Config
 from flask_cors import CORS
-from spotify_api import search_podcasts, get_podcast_episodes
+from spotify_api import search_podcasts, get_podcast_episodes, find_show_by_title
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -86,6 +86,38 @@ def podcast_episodes():
         return jsonify(result)
     except Exception as e:
         return {"error": str(e)}, 500
+    
+@app.route("/podcast-episodes-by-title")
+def podcast_episodes_by_title():
+    title = request.args.get("show_title")
+    if not title:
+        return {"error": "Missing required parameter 'title'"}, 400
+
+    try:
+        show = find_show_by_title(title)
+        if not show:
+            return {"error": f"No show found with title '{title}'"}, 404
+
+        show_id = show["id"]
+        episodes = get_podcast_episodes(show_id)
+
+        result = [
+            {
+                "show_name": show["name"],
+                "name": ep["name"],
+                "description": ep["description"],
+                "release_date": ep["release_date"],
+                "duration_ms": ep["duration_ms"],
+                "url": ep["external_urls"]["spotify"],
+                "audio_preview_url": ep.get("audio_preview_url"),
+                "image": ep["images"][0]["url"] if ep.get("images") else None
+            }
+            for ep in episodes
+        ]
+        return jsonify(result)
+    except Exception as e:
+        return {"error": str(e)}, 500
+
 
 if __name__ == "__main__":
     with app.app_context():

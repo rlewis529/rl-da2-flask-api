@@ -47,3 +47,14 @@ def get_podcast_episodes(show_id, limit=20):
     response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
     return response.json().get("items", [])
+
+def find_show_by_title(title):
+    token = get_spotify_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {"q": title, "type": "show", "limit": 1}
+
+    response = requests.get(SEARCH_URL, headers=headers, params=params)
+    response.raise_for_status()
+
+    shows = response.json().get("shows", {}).get("items", [])
+    return shows[0] if shows else None
