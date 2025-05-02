@@ -40,6 +40,9 @@ def search_podcast():
 
     try:
         results = search_podcasts(query)
+        english_shows = [item for item in results if "en" in item.get("languages", [])]
+        sorted_shows = sorted(english_shows, key=lambda x: x.get("total_episodes", 0), reverse=True)
+
         podcasts = [
             {
                 "name": item["name"],
@@ -50,7 +53,7 @@ def search_podcast():
                 "url": item["external_urls"]["spotify"],
                 "episodes": item["total_episodes"]
             }
-            for item in results            
+            for item in sorted_shows          
         ]
         return jsonify(podcasts)
     except Exception as e:
