@@ -25,7 +25,7 @@ def get_spotify_token():
     response.raise_for_status()
     return response.json()["access_token"]
 
-def search_podcasts(query, limit=20):
+def search_podcasts(query, limit=50):
     token = get_spotify_token()
     headers = {"Authorization": f"Bearer {token}"}
     params = {
@@ -37,3 +37,13 @@ def search_podcasts(query, limit=20):
     response = requests.get(SEARCH_URL, headers=headers, params=params)
     response.raise_for_status()
     return response.json()["shows"]["items"]
+
+def get_podcast_episodes(show_id, limit=20):
+    token = get_spotify_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {"limit": limit}  # You can also add offset here for pagination
+
+    url = f"https://api.spotify.com/v1/shows/{show_id}/episodes"
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    return response.json().get("items", [])
