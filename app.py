@@ -3,6 +3,8 @@ from models import db, Stock
 from config import Config
 from flask_cors import CORS
 from spotify_api import search_podcasts, get_podcast_episodes, find_show_by_title
+from reddit_api import get_reddit_mentions
+# Optionally later: from sentiment_utils import analyze_sentiment_batch
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -118,6 +120,34 @@ def podcast_episodes_by_title():
     except Exception as e:
         return {"error": str(e)}, 500
 
+
+@app.route("/podcast-sentiment")
+def podcast_sentiment():
+    query = request.args.get("q")
+    days = int(request.args.get("days", 30))  # default to 30 days
+
+    if not query:
+        return jsonify({"error": "Missing required query parameter: 'q' (podcast name)"}), 400
+
+    try:
+        # Get filtered Reddit mentions
+        mentions = get_reddit_mentions(query, days_back=days)
+
+        # (Optional future step)
+        # sentiment_scores = analyze_sentiment_batch([m["text"] for m in mentions])
+        # avg_sentiment = round(sum(sentiment_scores) / len(sentiment_scores), 3) if sentiment_scores else None
+
+        return jsonify({
+            "podcast": query,
+            "days_lookback": days,
+            "mention_count": len(mentions),
+            # "average_sentiment": avg_sentiment,
+            "mentions": mentions
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 
 if __name__ == "__main__":
     with app.app_context():
