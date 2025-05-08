@@ -4,6 +4,7 @@ from config import Config
 from flask_cors import CORS
 from spotify_api import search_podcasts, get_podcast_episodes, find_show_by_title
 from reddit_api import get_reddit_mentions
+from youtube_api import get_youtube_buzz
 # Optionally later: from sentiment_utils import analyze_sentiment_batch
 
 app = Flask(__name__)
@@ -147,7 +148,22 @@ def podcast_sentiment():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
+
+@app.route("/youtube-buzz")
+def youtube_buzz():
+    channel_name = request.args.get("q")
+    max_results = int(request.args.get("limit", 5))
+
+    if not channel_name:
+        return {"error": "Missing required query parameter: 'q'"}, 400
+
+    try:
+        data = get_youtube_buzz(channel_name, max_results=max_results)
+        return jsonify(data)
+    except ValueError as ve:
+        return {"error": str(ve)}, 404
+    except Exception as e:
+        return {"error": f"Failed to fetch data: {str(e)}"}, 500
 
 if __name__ == "__main__":
     with app.app_context():
